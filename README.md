@@ -1,91 +1,86 @@
-# Transmisión de información mediante luz invisible (Morse por láser IR)
+# Transmisión de información mediante luz invisible (Morse con control IR)
 
 Proyecto de **Teoría de Señales** — Universidad de Manizales.
 
-Prototipo de comunicación óptica en espacio libre (**FSO**) que transmite texto codificado en **código Morse** usando un **diodo láser infrarrojo** (luz invisible) y modulación **OOK** (láser encendido = pulso, apagado = espacio). Un segundo Arduino recibe la luz con un fotodiodo, decodifica el Morse y muestra el texto.
+Un **control remoto infrarrojo** emite luz invisible al ojo humano. Cada pulsación se interpreta como un símbolo del **código Morse** —corta = punto, larga = raya—, un **Arduino** con un receptor IR la decodifica y el mensaje aparece en una **pantalla LCD 16x2**.
 
 **Integrantes:** Juan Felipe Orozco · Daniel Villegas Toro · Juan Miguel Gómez
 **Docente:** Mateo Cardona Marín
 
 ## Objetivo
 
-Diseñar, implementar y evaluar un prototipo de transmisión y recepción de datos mediante láser infrarrojo, midiendo:
+Diseñar, implementar y evaluar un prototipo de transmisión de información mediante luz infrarroja, midiendo:
 
-- precisión en la demodulación del código Morse,
-- tiempo de respuesta del sensor,
-- alcance frente a la alineación del haz,
-- efecto del ruido óptico ambiental (relación señal/ruido).
+- precisión en la decodificación del código Morse,
+- tiempo de respuesta del sistema,
+- alcance y ángulo de recepción,
+- efecto de la luz ambiental.
 
 ## Estructura
 
 ```
-emisor_morse_ir/      Sketch del emisor (texto -> Morse -> láser IR)
-receptor_morse_ir/    Sketch del receptor (fotodiodo -> Morse -> texto, SNR, estadísticas)
-docs/                 Marco teórico (Word)
+morse_ir_lcd/      Sketch principal: control IR -> receptor VS1838B -> Arduino -> LCD
+version_laser/     Versión alternativa con láser IR y fotodiodo (dos Arduinos)
+docs/              Marco teórico (Word)
 ```
 
 ## Funcionamiento
 
 ```
-[Monitor Serie] -> Arduino emisor -> transistor -> láser IR 850 nm
-                                                     |  (haz invisible)
-                                                     v
-[Monitor Serie] <- Arduino receptor <- LM393 <- fotodiodo PIN + filtro IR
+Control remoto IR  ──(luz IR 940 nm, portadora 38 kHz)──>  VS1838B  ->  Arduino  ->  LCD 16x2
+ pulsación corta = .                                        demodula    decodifica   "HOLA"
+ pulsación larga = -
 ```
 
-Tiempos Morse estándar, con `UNIDAD = 60 ms` (~20 palabras por minuto):
+El control no emite luz continua: modula su LED a **38 kHz** y el receptor solo responde a esa frecuencia (filtro pasabanda + demodulador), lo que lo hace inmune a la luz ambiental. Mientras el botón se mantiene presionado, el control repite su señal cada ~110 ms; el Arduino considera el botón soltado tras 160 ms sin señal.
 
-| Elemento | Duración |
-|---|---|
-| Punto | 1 u |
-| Raya | 3 u |
-| Entre símbolos | 1 u |
-| Entre letras | 3 u |
-| Entre palabras | 7 u |
+| Parámetro (en el código) | Valor | Significado |
+|---|---|---|
+| `UMBRAL_RAYA` | 300 ms | Pulsación más corta = punto, más larga = raya |
+| `PAUSA_LETRA` | 800 ms | Silencio que termina una letra |
+| `PAUSA_PALABRA` | 2500 ms | Silencio que agrega un espacio (0 = desactivado) |
+| `TIEMPO_SOLTAR` | 160 ms | Tiempo sin señal para considerar el botón soltado |
 
-El receptor clasifica cada pulso como punto (< 2 u) o raya (≥ 2 u) y usa los silencios para separar letras (≥ 2 u) y palabras (≥ 5 u). `UNIDAD` debe ser igual en ambos sketches.
+**Pantalla:** la fila 1 muestra el mensaje (últimos 16 caracteres) y la fila 2 los símbolos en curso y la letra que formarían (`.-.     >R`).
 
-### Emisor
-- Escribir un mensaje en el Monitor Serie (9600 baudios, "Nueva línea") y presionar Enter.
-- `#ON` / `#OFF`: láser encendido fijo, para alinear y medir la señal.
-- Pulsador opcional en D2 como manipulador Morse manual.
+**Botones de función** (valores del control de los kits de Arduino; cualquier otro botón es la tecla Morse):
 
-### Receptor
-- Muestra el texto recibido en el Monitor Serie.
-- `n`: mide el ruido (láser apagado) · `s`: mide la señal (láser con `#ON`) → calcula la **SNR en dB** y sugiere el umbral del potenciómetro.
-- `e`: estadísticas (caracteres, no reconocidos, tasa de error, pulsos de ruido) · `r`: reiniciar.
-- `MOSTRAR_TIEMPOS = true` imprime la duración de cada pulso.
-- `USAR_COMPARADOR = false` permite funcionar sin el LM393 leyendo A0 directamente.
+| Botón | Código | Acción |
+|---|---|---|
+| `>\|\|` | `0x43` | Espacio |
+| `\|<<` | `0x44` | Borrar símbolos en curso o el último carácter |
+| `CH-` | `0x45` | Limpiar pantalla |
+
+Si el control es otro, abrir el Monitor Serie (9600 baudios): cada botón imprime su protocolo y código, y se cambian las constantes `BOTON_*` en el sketch. El Monitor Serie también muestra la duración de cada pulsación, útil para el informe.
 
 ## Conexiones
 
-**Emisor**
-- D8 → 1 kΩ → base del NPN (2N2222/BC547); colector → GND del módulo láser; emisor → GND
-- VCC del módulo láser → 5V
-- D13 → LED indicador · D2 → pulsador → GND (opcional)
+| Componente | Pin | Arduino |
+|---|---|---|
+| Receptor IR (VS1838B / TSOP1838 / KY-022) | OUT · VCC · GND | D2 · 5V · GND |
+| LCD 16x2 con I2C | SDA · SCL · VCC · GND | A4 · A5 · 5V · GND |
+| Buzzer **activo** (opcional) | + · − | D8 · GND |
 
-**Receptor**
-- 5V → cátodo del fotodiodo; ánodo → nodo S → 100 kΩ → GND (fototransistor: colector a 5V, emisor a nodo S, 10 kΩ a GND)
-- Nodo S → A0 y → LM393 pin 3 (IN+)
-- Potenciómetro 10 kΩ (5V–GND), cursor → LM393 pin 2 (IN−)
-- LM393 pin 1 (OUT) → D2 con pull-up de 10 kΩ; pin 8 → 5V, pin 4 → GND, 100 nF entre 8 y GND
-- D13 → LED de alineación · D9 → buzzer pasivo (opcional)
+El LED de la placa (D13) parpadea con cada señal IR. No usar buzzer pasivo con `tone()`: la librería IRremote usa el mismo temporizador.
 
 ## Materiales
 
-| Emisor | Receptor |
-|---|---|
-| Arduino Uno/Nano | Arduino Uno/Nano |
-| Módulo láser IR 850 nm, 5 V, ≤ 5 mW, con driver | Fotodiodo PIN IR (SFH 213 FA, BPV10NF o BPW34) o fototransistor IR (L14G1) |
-| Transistor NPN 2N2222 / BC547 + 1 kΩ | Comparador LM393 + potenciómetro 10 kΩ |
-| LED + 220 Ω | Resistencias 100 kΩ / 10 kΩ, condensadores 100 nF |
-| Pulsador (opcional) | Filtro óptico IR pasa-largo (720–850 nm) |
-| | LED + 220 Ω, buzzer pasivo, lente convexa y tubo negro (opcionales) |
+- Arduino Uno + cable USB
+- Control remoto infrarrojo (protocolo NEC, como el de los kits de Arduino)
+- Receptor IR VS1838B / TSOP1838 o módulo KY-022
+- Pantalla LCD 16x2 con módulo I2C (dirección 0x27 o 0x3F)
+- Protoboard y cables jumper
+- Buzzer activo y LED (opcionales)
 
-Además: protoboards, jumpers, power bank, multímetro, cinta métrica y soportes para alinear.
+## Software
 
-> No usar receptores TSOP1838 (de control remoto): solo detectan luz modulada a 38 kHz.
+Arduino IDE 2 con las librerías (Herramientas → Gestionar librerías):
 
-## Seguridad
+- **IRremote** (Armin Joachimsmeyer), versión 4.x
+- **LiquidCrystal I2C** (Frank de Brabander)
 
-El haz infrarrojo **no es visible** y el ojo no tiene reflejo de parpadeo ante él. Usar potencias ≤ 5 mW, nunca apuntar a personas ni mirar el módulo de frente y, de ser posible, usar gafas de protección para 850 nm. Para alinear, la cámara frontal de muchos celulares muestra el punto IR.
+Si la LCD enciende pero no muestra texto: ajustar el contraste con el potenciómetro azul del módulo I2C o cambiar `DIRECCION_LCD` a `0x3F`.
+
+## Versión con láser
+
+La carpeta [`version_laser/`](version_laser) contiene la propuesta original: un Arduino emisor con diodo láser IR de 850 nm y un Arduino receptor con fotodiodo PIN, comparador LM393 y medición de SNR. Se conserva como alternativa para pruebas de mayor alcance.
