@@ -22,6 +22,7 @@ Diseñar, implementar y evaluar un prototipo de transmisión de información med
 morse_ir_lcd/      Sketch principal: control IR -> receptor VS1838B -> Arduino -> LCD
 version_laser/     Versión alternativa con láser IR y fotodiodo (dos Arduinos)
 docs/              Marco teórico (Word)
+BITACORA.md        Historia del proyecto, montaje paso a paso, problemas y guía para la exposición
 ```
 
 ## Funcionamiento
