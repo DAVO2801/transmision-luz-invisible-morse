@@ -23,6 +23,8 @@ Un **control remoto infrarrojo** emite luz que el ojo humano no puede ver. Cada 
 | 07/10/2026 | Se replanteó el proyecto: usar **un solo Arduino** y un **control remoto IR** en lugar del láser, mostrando el mensaje en una **pantalla LCD**. |
 | 08/10/2026 | Se escribió el nuevo programa (`morse_ir_lcd`), se actualizó el marco teórico (resumen, objetivos, definiciones, materiales y desarrollos) y el README. La versión con láser se conservó en `version_laser/`. |
 | 19/10/2026 | Se armó el circuito físico (receptor, LCD, buzzer y LED) y se hicieron las primeras pruebas con mensajes. |
+| 23/10/2026 | Se decidió una mejora: dictar por voz en el celular y enviar el texto por Bluetooth a un 2.º Arduino (transmisor) que lo emite en Morse con un LED IR. El receptor no cambia. |
+| 26/10/2026 | Se escribió el código del transmisor (`transmisor_bt_morse`), se armó con módulo HC-05 y LED IR, y se preparó la guía de armado de los dos Arduinos (PDF en `docs/`). |
 
 **¿Por qué se cambió del láser al control remoto?**
 
@@ -250,8 +252,9 @@ La LCD muestra los últimos 16 caracteres; los mensajes más largos se desplazan
 
 | Ruta | Contenido |
 |---|---|
-| `morse_ir_lcd/` | Programa principal (control IR + LCD) |
+| `morse_ir_lcd/` | Receptor (control IR o Bluetooth + LCD) |
+| `transmisor_bt_morse/` | Transmisor: texto por Bluetooth HC-05 -> LED IR en Morse |
 | `version_laser/` | Versión alternativa con láser IR y fotodiodo (dos Arduinos) |
-| `docs/` | Marco teórico en Word |
+| `docs/` | Marco teórico en Word y guía de armado en PDF |
 | `README.md` | Descripción técnica, conexiones y materiales |
 | `BITACORA.md` | Este documento |

@@ -16,6 +16,7 @@
    BOTON_ESPACIO -> termina la letra y agrega un espacio
    BOTON_BORRAR  -> borra los símbolos en curso o, si no hay, el último carácter
    BOTON_LIMPIAR -> borra toda la pantalla
+   BOTON_CORAZON -> dibuja un corazón (figura propia de la LCD)
   Para conocer los códigos de otro control: abrir el Monitor Serie (9600 baudios)
   y presionar cada botón; se imprime su protocolo y su código.
 
@@ -54,6 +55,21 @@ const unsigned long PAUSA_PALABRA = 2500; // silencio que agrega un espacio (0 =
 const uint16_t BOTON_ESPACIO = 0x43;  // >||
 const uint16_t BOTON_BORRAR  = 0x44;  // |<<
 const uint16_t BOTON_LIMPIAR = 0x45;  // CH-
+const uint16_t BOTON_CORAZON = 0x47;  // CH+
+
+// Corazón dibujado en la cuadrícula de 5x8 puntos de un carácter de la LCD.
+// Se guarda en la posición 1 de la memoria de figuras (la 0 no sirve dentro de un texto).
+const char CORAZON = '\x01';
+byte figuraCorazon[8] = {
+  0b00000,
+  0b01010,
+  0b11111,
+  0b11111,
+  0b11111,
+  0b01110,
+  0b00100,
+  0b00000
+};
 
 struct Morse { char c; const char* codigo; };
 
@@ -232,6 +248,9 @@ void procesarSenal(unsigned long ahora) {
     borrar();
   } else if (datos.command == BOTON_LIMPIAR) {
     limpiar();
+  } else if (datos.command == BOTON_CORAZON) {
+    terminarLetra();
+    agregarCaracter(CORAZON);
   } else {
     nuevaPulsacion(ahora);
   }
@@ -252,6 +271,7 @@ void setup() {
 
   lcd.init();
   lcd.backlight();
+  lcd.createChar(1, figuraCorazon);
   lcd.setCursor(0, 0);
   lcd.print(F("Morse por luz IR"));
   lcd.setCursor(0, 1);

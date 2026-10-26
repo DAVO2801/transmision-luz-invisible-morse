@@ -19,11 +19,21 @@ Diseñar, implementar y evaluar un prototipo de transmisión de información med
 ## Estructura
 
 ```
-morse_ir_lcd/      Sketch principal: control IR -> receptor VS1838B -> Arduino -> LCD
-version_laser/     Versión alternativa con láser IR y fotodiodo (dos Arduinos)
-docs/              Marco teórico (Word)
-BITACORA.md        Historia del proyecto, montaje paso a paso, problemas y guía para la exposición
+morse_ir_lcd/         Receptor: receptor VS1838B -> Arduino -> LCD (control IR o Bluetooth)
+transmisor_bt_morse/  Transmisor: texto por Bluetooth HC-05 -> LED IR en Morse a 38 kHz
+version_laser/        Versión alternativa con láser IR y fotodiodo (dos Arduinos)
+docs/                 Marco teórico (Word) y guía de armado (PDF)
+BITACORA.md           Historia del proyecto, montaje paso a paso, problemas y guía para la exposición
 ```
+
+## Dos formas de enviar el mensaje
+
+El receptor (`morse_ir_lcd`) no cambia; recibe la misma luz IR a 38 kHz de dos fuentes:
+
+1. **Control remoto IR:** cada pulsación es un símbolo Morse (corta = punto, larga = raya).
+2. **Transmisor Bluetooth (`transmisor_bt_morse`):** un 2.º Arduino recibe texto del celular por un módulo HC-05, lo convierte a Morse y lo emite con un LED infrarrojo. Así se puede dictar por voz en el celular (transcripción del teclado) y ver el texto aparecer en la LCD.
+
+El montaje detallado de los dos Arduinos está en [`docs/Guia_Armado_Receptor_y_Transmisor.pdf`](docs/Guia_Armado_Receptor_y_Transmisor.pdf).
 
 ## Funcionamiento
 
