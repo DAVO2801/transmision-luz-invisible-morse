@@ -25,6 +25,7 @@ Un **control remoto infrarrojo** emite luz que el ojo humano no puede ver. Cada 
 | 19/10/2026 | Se armó el circuito físico (receptor, LCD, buzzer y LED) y se hicieron las primeras pruebas con mensajes. |
 | 23/10/2026 | Se decidió una mejora: dictar por voz en el celular y enviar el texto por Bluetooth a un 2.º Arduino (transmisor) que lo emite en Morse con un LED IR. El receptor no cambia. |
 | 26/10/2026 | Se escribió el código del transmisor (`transmisor_bt_morse`), se armó con módulo HC-05 y LED IR, y se preparó la guía de armado de los dos Arduinos (PDF en `docs/`). |
+| 04/11/2026 | Se emparejó el HC-05 con el celular (app Serial Bluetooth Terminal) y se probó la transmisión completa: texto/voz desde el celular → Morse por luz IR → LCD del receptor. Se agregó un LED visible (testigo) en D4 del transmisor que destella junto al LED infrarrojo, para verificar la transmisión sin cámara. |
 
 **¿Por qué se cambió del láser al control remoto?**
 
@@ -142,7 +143,7 @@ Pin 13 → resistencia 220 Ω → pata LARGA del LED
 
 Nunca conectar el LED sin resistencia. Si queda al revés no se daña, solo no prende.
 
-### 5.6 Revisión antes de encender
+### 5.6 Revisión antes de encender (receptor)
 
 - [ ] Ningún cable une la fila de 5V con la de GND.
 - [ ] Receptor: OUT → pin 2, GND → GND, VCC → 5V.
@@ -151,13 +152,76 @@ Nunca conectar el LED sin resistencia. Si queda al revés no se daña, solo no p
 
 ---
 
+## 5B. Montaje del transmisor (Arduino 2: Bluetooth → Morse por LED IR)
+
+Va en su propia protoboard y con un segundo Arduino. Misma convención de rieles.
+
+### 5B.1 Módulo Bluetooth HC-05 (tipo ZS-040)
+
+Pines de arriba hacia abajo: STATE, RXD, TXD, GND, VCC, EN. Etiqueta: Power 3.6–6V (VCC a 5V, nunca a 3.3V), LEVEL 3.3V (por eso el RXD lleva divisor).
+
+| Pin HC-05 | Va a |
+|---|---|
+| STATE | No se conecta |
+| RXD | Divisor de voltaje, viene del pin **D11** |
+| TXD | Pin **D10** del Arduino (directo) |
+| GND | Fila de arriba (GND) |
+| VCC | Fila de abajo (5V) |
+| EN | No se conecta |
+
+### 5B.2 Divisor de voltaje para el RXD (baja 5V → 3.3V)
+
+| Elemento | Una punta | La otra punta |
+|---|---|---|
+| Cable | Pin **D11** | Columna 18 |
+| R1 = **2 kΩ** | Columna 18 | Columna 20 |
+| R2 = **1 kΩ** | Columna 20 | Fila de arriba (GND) |
+| Cable | Columna 20 | RXD del HC-05 |
+
+El TXD va directo a D10, sin divisor. Solo el RXD lleva las dos resistencias.
+
+### 5B.3 LED infrarrojo con transistor 2N2222
+
+Transistor TO-92, cara plana hacia uno, patas abajo, de izquierda a derecha: Emisor, Base, Colector.
+
+| Conexión | Detalle y sentido |
+|---|---|
+| D3 → Base | Pin **D3** → 1 kΩ → Base (pata del centro) |
+| Colector → LED | Colector (derecha) → pata corta (cátodo, −) del LED IR |
+| LED → 5V | Pata larga (ánodo, +) del LED IR → 100 Ω → fila de abajo (5V) |
+| Emisor → GND | Emisor (izquierda) → fila de arriba (GND) |
+
+### 5B.4 LED visible (testigo) — se enciende junto con el LED IR
+
+Permite verificar la transmisión a simple vista, sin cámara. El positivo sale del pin D4, NO del riel de 5V.
+
+```
+Pin D4 → resistencia 220 Ω → pata LARGA (+) del LED → pata CORTA (−) del LED → GND
+```
+
+⚠️ Este LED no debe tocar el riel de 5V. Si se conecta al 5V por error, hace un corto y se apaga todo el circuito (incluido el HC-05). Sus dos patas van en columnas distintas, y siempre con la resistencia en medio.
+
+### 5B.5 Revisión antes de encender (transmisor)
+
+- [ ] VCC del HC-05 en 5V y GND en GND (no invertidos).
+- [ ] TXD → D10; RXD → divisor → D11.
+- [ ] LED IR: pata corta al colector, pata larga por la 100 Ω al 5V; base por la 1 kΩ a D3; emisor a GND.
+- [ ] LED testigo: D4 → 220 Ω → LED → GND (sin tocar el 5V).
+- [ ] Ningún cable une la fila de 5V con la de GND.
+
+---
+
 ## 6. Software
 
 1. Abrir **Arduino IDE 2**.
-2. Instalar las librerías (Herramientas → Gestionar librerías): **IRremote** (Armin Joachimsmeyer, v4.x) y **LiquidCrystal I2C** (Frank de Brabander).
-3. Abrir `morse_ir_lcd/morse_ir_lcd.ino`.
-4. Elegir placa **Arduino Uno** y el puerto COM.
+2. Instalar las librerías (Herramientas → Gestionar librerías): **IRremote** (Armin Joachimsmeyer, v4.x) y **LiquidCrystal I2C** (Frank de Brabander). `SoftwareSerial` ya viene incluida.
+3. Cargar en cada Arduino su programa:
+   - Receptor (LCD + sensor IR): `morse_ir_lcd/morse_ir_lcd.ino`
+   - Transmisor (HC-05 + LED IR): `transmisor_bt_morse/transmisor_bt_morse.ino`
+4. Elegir placa **Arduino Uno** y el puerto COM de esa placa.
 5. Presionar **Subir** (→).
+
+> Importante: los dos Arduinos se ven iguales ("Arduino UNO"), así que es fácil equivocarse de puerto COM. Programar **uno a la vez, con el otro desconectado**. Abrir el archivo no sube el código: hay que presionar la flecha de Subir. Si al enchufar el receptor en el Monitor Serie aparece otro mensaje (p. ej. "RECEPTOR MORSE POR LUZ IR" o "Nivel de reposo"), es que tiene cargado un sketch viejo: volver a subir `morse_ir_lcd.ino`.
 
 Al arrancar, la LCD muestra:
 
@@ -194,6 +258,17 @@ El Monitor Serie (9600 baudios) muestra el código de cada botón y la duración
 
 La LCD muestra los últimos 16 caracteres; los mensajes más largos se desplazan hacia la izquierda.
 
+### Uso por Bluetooth (transmisor)
+
+1. Encender los dos Arduinos (receptor con la LCD, transmisor con el HC-05 y el LED IR).
+2. Emparejar el HC-05 en el celular (Ajustes → Bluetooth, nombre **HC-05**, PIN **1234** o **0000**). En Android nuevo hay que tener la **Ubicación encendida** para que aparezca.
+3. Abrir la app **Serial Bluetooth Terminal** y conectarse al HC-05.
+4. Alinear el LED IR del transmisor de frente al sensor del receptor (10–30 cm).
+5. Escribir un mensaje (o dictarlo con el micrófono del teclado) y enviarlo: aparece en la LCD del receptor.
+6. El **LED testigo (D4)** del transmisor destella con cada punto y raya, así se verifica la transmisión sin cámara.
+
+También se puede enviar texto desde el **Monitor Serie del computador** (9600 baudios), sin Bluetooth.
+
 ---
 
 ## 8. Problemas encontrados y soluciones
@@ -209,6 +284,11 @@ La LCD muestra los últimos 16 caracteres; los mensajes más largos se desplazan
 | Todo sale como punto o todo como raya | Ajustar `UMBRAL_RAYA` en el código. |
 | Se usa buzzer pasivo con `tone()` | No funciona: la librería IRremote usa el mismo temporizador. Usar buzzer activo. |
 | No se ve si el control emite | Mirar el LED del control con la cámara frontal del celular. |
+| El receptor deja de detectar el control | Tenía cargado un sketch viejo por confusión de puertos COM. Volver a subir `morse_ir_lcd.ino`; el sensor no estaba dañado. |
+| Error "undefined" o "cannot open port COMx" al subir | Glitch del IDE / puerto equivocado. Cerrar el Monitor Serie, seleccionar el COM correcto y programar un Arduino a la vez. |
+| El HC-05 no aparece en el celular | Encender la **Ubicación** del celular (Android nuevo la exige para escanear); desvincularlo de otros celulares; con VCC en 5V el LED debe parpadear rápido. Algunos Samsung muy nuevos tardan o lo filtran. |
+| Al agregar el LED testigo se apaga todo (incluido el HC-05) | El LED estaba tocando el riel de 5V y hacía un corto. El positivo del LED testigo sale del pin **D4**, no del 5V. |
+| No se distingue punto de raya en el LED testigo | Es normal: va muy rápido. El LED testigo confirma que hay transmisión; para leer el mensaje está la LCD. |
 
 ---
 

@@ -31,7 +31,7 @@ BITACORA.md           Historia del proyecto, montaje paso a paso, problemas y gu
 El receptor (`morse_ir_lcd`) no cambia; recibe la misma luz IR a 38 kHz de dos fuentes:
 
 1. **Control remoto IR:** cada pulsación es un símbolo Morse (corta = punto, larga = raya).
-2. **Transmisor Bluetooth (`transmisor_bt_morse`):** un 2.º Arduino recibe texto del celular por un módulo HC-05, lo convierte a Morse y lo emite con un LED infrarrojo. Así se puede dictar por voz en el celular (transcripción del teclado) y ver el texto aparecer en la LCD.
+2. **Transmisor Bluetooth (`transmisor_bt_morse`):** un 2.º Arduino recibe texto del celular por un módulo HC-05, lo convierte a Morse y lo emite con un LED infrarrojo. Así se puede dictar por voz en el celular (transcripción del teclado) y ver el texto aparecer en la LCD. Lleva un **LED visible (testigo) en D4** que destella junto con el LED infrarrojo, para verificar la transmisión sin cámara. También acepta texto desde el Monitor Serie del PC (9600 baudios), sin Bluetooth.
 
 El montaje detallado de los dos Arduinos está en [`docs/Guia_Armado_Receptor_y_Transmisor.pdf`](docs/Guia_Armado_Receptor_y_Transmisor.pdf).
 
