@@ -28,6 +28,9 @@
      colector -> cátodo (pata corta) del LED IR
      ánodo (pata larga) del LED IR -> 100 Ω -> 5V
      emisor -> GND
+   LED visible (testigo), opcional:
+     D4 -> 220 Ω -> pata larga (+) del LED -> pata corta (-) -> GND
+     Se enciende junto con el LED infrarrojo en cada punto y raya.
 
   LIBRERÍAS (Arduino IDE -> Gestor de librerías)
    - IRremote (Armin Joachimsmeyer), versión 4.x   [ya instalada]
@@ -41,9 +44,10 @@
 #include <IRremote.hpp>
 #include <SoftwareSerial.h>
 
-const byte PIN_IR_LED = 3;    // salida al LED infrarrojo (lo exige IRremote en el Uno/Nano)
-const byte PIN_BT_RX  = 10;   // Arduino RX  <- TXD del HC-05
-const byte PIN_BT_TX  = 11;   // Arduino TX  -> divisor -> RXD del HC-05
+const byte PIN_IR_LED   = 3;  // salida al LED infrarrojo (lo exige IRremote en el Uno/Nano)
+const byte PIN_LED_VIS  = 4;  // LED visible: se enciende junto con el LED infrarrojo
+const byte PIN_BT_RX    = 10; // Arduino RX  <- TXD del HC-05
+const byte PIN_BT_TX    = 11; // Arduino TX  -> divisor -> RXD del HC-05
 
 SoftwareSerial bt(PIN_BT_RX, PIN_BT_TX);
 
@@ -102,10 +106,12 @@ const char* buscarCodigo(char c) {
 
 // Mantiene la "pulsación" enviando tramas NEC repetidas durante 'ms' milisegundos
 void enviarPulso(unsigned int ms) {
+  digitalWrite(PIN_LED_VIS, HIGH);   // prende el LED visible mientras emite el IR
   unsigned long inicio = millis();
   do {
     IrSender.sendNEC(NEC_ADDR, NEC_CMD, 0);
   } while (millis() - inicio < ms);
+  digitalWrite(PIN_LED_VIS, LOW);    // lo apaga al terminar el punto o la raya
 }
 
 void enviarCodigo(const char* codigo) {
@@ -149,6 +155,9 @@ void procesarCaracter(char c) {
 }
 
 void setup() {
+  pinMode(PIN_LED_VIS, OUTPUT);
+  digitalWrite(PIN_LED_VIS, LOW);
+
   Serial.begin(9600);
   bt.begin(9600);                   // baudios por defecto del HC-05 en modo normal
   IrSender.begin(PIN_IR_LED);
