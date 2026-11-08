@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:gravity="center_horizontal">
+
+        <Button
+            android:id="@+id/btnConectar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Conectar al HC-05" />
+
+        <TextView
+            android:id="@+id/tvEstado"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Desconectado"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btnHablar"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:layout_marginTop="28dp"
+            android:text="🎤 Hablar"
+            android:textSize="28sp" />
+
+        <TextView
+            android:id="@+id/tvTexto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:minHeight="60dp"
+            android:gravity="center"
+            android:hint="Aquí aparece lo que digas"
+            android:textSize="22sp" />
+
+        <Button
+            android:id="@+id/btnEnviar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="16dp"
+            android:text="Enviar"
+            android:textSize="20sp" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,8 @@
+Pega estas 4 líneas en AndroidManifest.xml, justo ANTES de la etiqueta <application ...>:
+
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+(No borres nada de lo que ya trae el archivo; solo agrega estas líneas.)

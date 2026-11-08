@@ -26,6 +26,7 @@ Un **control remoto infrarrojo** emite luz que el ojo humano no puede ver. Cada 
 | 23/10/2026 | Se decidió una mejora: dictar por voz en el celular y enviar el texto por Bluetooth a un 2.º Arduino (transmisor) que lo emite en Morse con un LED IR. El receptor no cambia. |
 | 26/10/2026 | Se escribió el código del transmisor (`transmisor_bt_morse`), se armó con módulo HC-05 y LED IR, y se preparó la guía de armado de los dos Arduinos (PDF en `docs/`). |
 | 04/11/2026 | Se emparejó el HC-05 con el celular (app Serial Bluetooth Terminal) y se probó la transmisión completa: texto/voz desde el celular → Morse por luz IR → LCD del receptor. Se agregó un LED visible (testigo) en D4 del transmisor que destella junto al LED infrarrojo, para verificar la transmisión sin cámara. |
+| 08/11/2026 | Se creó una app Android propia (`app_morsevoz`, Kotlin): botón de voz → texto → envío al módulo. App Inventor no sirvió en Android 16, así que se compiló una app nativa por línea de comandos (JDK 17 + Gradle + SDK, sin Android Studio) y se instaló por USB (adb). Se descubrió que el módulo es **BLE** (no HC-05 clásico): la app conecta por GATT y escribe en la característica FFE1. Se afinaron los tiempos del transmisor (tramas NEC completas en vez de códigos de repetición) para que las rayas no se leyeran como puntos. Proyecto completo y funcionando. |
 
 **¿Por qué se cambió del láser al control remoto?**
 

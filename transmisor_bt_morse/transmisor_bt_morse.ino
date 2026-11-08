@@ -41,6 +41,11 @@
   Si cambias esos valores en el receptor, cámbialos también aquí.
 */
 
+// Genera los 38 kHz por hardware (temporizador del chip, pin 3 fijo en el Uno/Nano).
+// Es inmune a las interrupciones del Bluetooth, así la portadora sale limpia y el
+// receptor la decodifica bien. DEBE ir antes de incluir IRremote.hpp.
+#define SEND_PWM_BY_TIMER
+
 #include <IRremote.hpp>
 #include <SoftwareSerial.h>
 
@@ -53,7 +58,7 @@ SoftwareSerial bt(PIN_BT_RX, PIN_BT_TX);
 
 // Duraciones en milisegundos (deben ser coherentes con el receptor)
 const unsigned int T_PUNTO   = 150;   // pulso corto  -> el receptor lo ve como punto (<300)
-const unsigned int T_RAYA    = 500;   // pulso largo  -> el receptor lo ve como raya (>=300)
+const unsigned int T_RAYA    = 550;   // pulso largo  -> el receptor lo ve como raya (>=300)
 const unsigned int T_SIMBOLO = 350;   // silencio entre símbolos de una letra (>160 y <800)
 const unsigned int T_LETRA   = 1100;  // silencio al terminar una letra (>800 y <2500)
 const unsigned int T_PALABRA = 2900;  // silencio total para que inserte un espacio (>2500)
@@ -104,12 +109,17 @@ const char* buscarCodigo(char c) {
   return nullptr;
 }
 
-// Mantiene la "pulsación" enviando tramas NEC repetidas durante 'ms' milisegundos
+// Mantiene la "pulsación" enviando tramas NEC completas, una tras otra, durante
+// 'ms' milisegundos, con un pequeño silencio entre ellas para que el receptor
+// decodifique cada una. Como todas son tramas completas (no códigos de
+// repetición), el enlace es mucho más robusto: el receptor mide bien si el
+// pulso fue corto (punto) o largo (raya), sin perder la señal a mitad.
 void enviarPulso(unsigned int ms) {
   digitalWrite(PIN_LED_VIS, HIGH);   // prende el LED visible mientras emite el IR
   unsigned long inicio = millis();
   do {
     IrSender.sendNEC(NEC_ADDR, NEC_CMD, 0);
+    delay(20);                        // silencio corto: separa tramas sin "soltar" (<160 ms)
   } while (millis() - inicio < ms);
   digitalWrite(PIN_LED_VIS, LOW);    // lo apaga al terminar el punto o la raya
 }

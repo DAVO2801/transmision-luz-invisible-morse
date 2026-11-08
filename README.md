@@ -20,11 +20,16 @@ Diseñar, implementar y evaluar un prototipo de transmisión de información med
 
 ```
 morse_ir_lcd/         Receptor: receptor VS1838B -> Arduino -> LCD (control IR o Bluetooth)
-transmisor_bt_morse/  Transmisor: texto por Bluetooth HC-05 -> LED IR en Morse a 38 kHz
+transmisor_bt_morse/  Transmisor: texto por Bluetooth -> LED IR en Morse a 38 kHz
+app_morsevoz/         App Android (Kotlin): voz -> texto -> Bluetooth LE al transmisor
 version_laser/        Versión alternativa con láser IR y fotodiodo (dos Arduinos)
 docs/                 Marco teórico (Word) y guía de armado (PDF)
 BITACORA.md           Historia del proyecto, montaje paso a paso, problemas y guía para la exposición
 ```
+
+## Control por voz desde el celular (app MorseVoz)
+
+La app [`app_morsevoz`](app_morsevoz) (Android, Kotlin) capta la voz, la pasa a texto y lo envía por **Bluetooth LE** al módulo del transmisor, que lo emite en Morse. Así el flujo completo es: **hablar → texto → BLE → Arduino → luz infrarroja → LCD**. Incluye el APK listo para instalar.
 
 ## Dos formas de enviar el mensaje
 
